@@ -1,0 +1,44 @@
+month /  units
+
+realistic
+jan - 25.35
+feb - 25.23
+feb mid - 24.12
+march - 20.31
+April - 22.084
+may - 22.466
+June - 22.58
+June mid -22.24 
+July - 22.47
+July mid - 22.22
+august - 18.05
+sept - 16.954
+oct - 16.86
+nov - 23.6
+dec - 23.9
+
+
+
+same
+
+4 100w bulbs
+2 1000w ac
+1 700w heater
+1 800w washing machine
+1 600w fridge
+2 400w fan
+
+jan- 32.32
+feb - 33.98
+march - 32.95
+April - 36.605
+may - 37.057
+June  - 37.38
+July - 37.41
+July mid - 32.094
+august - 31.622
+September - 31.61
+October - 32.166
+November - 34.83
+December - 34.4
+
