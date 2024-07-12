@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Consumption Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function addDeviceEntry() {
+            const container = document.getElementById('devices-container');
+            const deviceEntry = document.createElement('div');
+            deviceEntry.className = 'device-entry';
+            deviceEntry.innerHTML = `
+                <select name="device[]" onchange="updateWattageOptions(this)">
+                    <option disabled selected>Device</option>
+                    <option value="AC">AC</option>
+                    <option value="HEATER">HEATER</option>
+                    <option value="WASHING MACHINE">WASHING MACHINE</option>
+                    <option value="FRIDGE">FRIDGE</option>
+                    <option value="LIGHTBULBS">LIGHTBULBS</option>
+                    <option value="OTHER">OTHER</option>
+                </select>
+                <select name="wattage_default[]" class="wattage-default" onchange="toggleCustomWattage(this)">
+                    <option disabled selected>Wattage</option>
+                </select>
+                <input type="number" step="0.01" name="wattage[]" placeholder="Wattage" class="wattage-custom" style="display: none;">
+                <input type="number" name="num_devices[]" placeholder="Number of Devices" required>
+                <button type="button" onclick="removeDeviceEntry(this)">Remove</button>
+            `;
+            updateWattageOptions(deviceEntry.querySelector('select[name="device[]"]'));
+            container.appendChild(deviceEntry);
+        }
+
+        function removeDeviceEntry(button) {
+            button.parentElement.remove();
+        }
+
+        function toggleCustomWattage(selectElement) {
+            const customWattageInput = selectElement.nextElementSibling;
+            if (selectElement.value === 'custom') {
+                customWattageInput.style.display = 'block';
+                customWattageInput.required = true;
+            } else {
+                customWattageInput.style.display = 'none';
+                customWattageInput.required = false;
+            }
+        }
+
+        function updateWattageOptions(deviceSelect) {
+            const wattageSelect = deviceSelect.nextElementSibling;
+            const device = deviceSelect.value;
+
+            const wattageOptions = {
+                'AC': [1000, 1200, 1500],
+                'HEATER': [500, 1000, 1500],
+                'WASHING MACHINE': [600, 800, 1000],
+                'FRIDGE': [400, 600, 800],
+                'LIGHTBULBS': [50, 100, 150]
+            };
+
+            wattageSelect.innerHTML = '<option disabled selected>Wattage</option>';
+            if (wattageOptions[device]) {
+                wattageOptions[device].forEach(wattage => {
+                    wattageSelect.innerHTML += `<option value="${wattage}">${wattage}</option>`;
+                });
+                wattageSelect.innerHTML += `<option value="custom">Custom</option>`;
+            } else {
+                wattageSelect.innerHTML = `<option value="custom">Custom</option>`;
+            }
+
+            toggleCustomWattage(wattageSelect);
+        }
+
+        function loadPreviousInputs() {
+            {% if previous_inputs %}
+                const devices = {{ previous_inputs.devices | tojson }};
+                const wattages = {{ previous_inputs.wattages | tojson }};
+                const num_devices = {{ previous_inputs.num_devices | tojson }};
+                const wattageDefaults = devices.map((device, i) => {
+                    const defaultOptions = {
+                        'AC': [1000, 1200, 1500],
+                        'HEATER': [500, 1000, 1500],
+                        'WASHING MACHINE': [600, 800, 1000],
+                        'FRIDGE': [400, 600, 800],
+                        'LIGHTBULBS': [50, 100, 150]
+                    };
+                    return defaultOptions[device] && defaultOptions[device].includes(wattages[i]) ? wattages[i] : 'custom';
+                });
+
+                for (let i = 0; i < devices.length; i++) {
+                    const container = document.getElementById('devices-container');
+                    const deviceEntry = document.createElement('div');
+                    deviceEntry.className = 'device-entry';
+                    deviceEntry.innerHTML = `
+                        <select name="device[]" onchange="updateWattageOptions(this)">
+                            <option disabled>Device</option>
+                            <option value="AC" ${devices[i] === 'AC' ? 'selected' : ''}>AC</option>
+                            <option value="HEATER" ${devices[i] === 'HEATER' ? 'selected' : ''}>HEATER</option>
+                            <option value="WASHING MACHINE" ${devices[i] === 'WASHING MACHINE' ? 'selected' : ''}>WASHING MACHINE</option>
+                            <option value="FRIDGE" ${devices[i] === 'FRIDGE' ? 'selected' : ''}>FRIDGE</option>
+                            <option value="LIGHTBULBS" ${devices[i] === 'LIGHTBULBS' ? 'selected' : ''}>LIGHTBULBS</option>
+                            <option value="OTHER" ${devices[i] === 'OTHER' ? 'selected' : ''}>OTHER</option>
+                        </select>
+                        <select name="wattage_default[]" class="wattage-default" onchange="toggleCustomWattage(this)">
+                            <option disabled>Wattage</option>
+                        </select>
+                        <input type="number" step="0.01" name="wattage[]" placeholder="Wattage" value="${wattages[i]}" class="wattage-custom" ${wattageDefaults[i] === 'custom' ? '' : 'style="display: none;"'}>
+                        <input type="number" name="num_devices[]" placeholder="Number of Devices" value="${num_devices[i]}" required>
+                        <button type="button" onclick="removeDeviceEntry(this)">Remove</button>
+                    `;
+                    container.appendChild(deviceEntry);
+                    updateWattageOptions(deviceEntry.querySelector('select[name="device[]"]'));
+                    deviceEntry.querySelector('select[name="wattage_default[]"]').value = wattageDefaults[i];
+                    toggleCustomWattage(deviceEntry.querySelector('select[name="wattage_default[]"]'));
+                }
+
+                document.getElementById('voltage').value = {{ previous_inputs.voltage }};
+                document.getElementById('start_timestamp').value = "{{ previous_inputs.start_timestamp }}";
+                document.getElementById('stop_timestamp').value = "{{ previous_inputs.stop_timestamp }}";
+            {% else %}
+                addDeviceEntry();
+            {% endif %}
+        }
+
+        function checkTimestampDifference(event) {
+            const startTimestamp = document.getElementById('start_timestamp').value;
+            const stopTimestamp = document.getElementById('stop_timestamp').value;
+
+            const startDate = new Date(startTimestamp);
+            const stopDate = new Date(stopTimestamp);
+
+            if ((stopDate - startDate) / (1000 * 60 * 60 * 24) > 20) {
+                alert("The time difference is too high, estimating the prediction might take more time than usual!");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadPreviousInputs);
+
+        function displayRoundedPrediction() {
+            {% if prediction %}
+                const prediction = parseFloat('{{ prediction }}').toFixed(2);
+                const expectedPrice = (prediction * 6.5).toFixed(2);
+                document.getElementById('prediction').innerText = `Prediction: ${prediction} kWh`;
+                document.getElementById('expectedPrice').innerText = `Expected Price: ${expectedPrice} Rupees (@6.5 Rs/Unit)`;
+            {% endif %}
+        }
+        
+        document.addEventListener('DOMContentLoaded', displayRoundedPrediction);
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Power Consumption Predictor</h1>
+        <form action="/predict" method="post" onsubmit="checkTimestampDifference(event)">
+            <div id="devices-container">
+            </div>
+            <button type="button" onclick="addDeviceEntry()">Add Device</button><br><br>
+            
+            <label for="voltage">Voltage (Default is 251 V):</label>
+            <input type="number" step="0.01" name="voltage" id="voltage" placeholder="Leave blank for default"><br><br>
+            
+            <label for="start_timestamp">Start Timestamp:</label>
+            <input type="datetime-local" name="start_timestamp" id="start_timestamp" required><br><br>
+            
+            <label for="stop_timestamp">Stop Timestamp:</label>
+            <input type="datetime-local" name="stop_timestamp" id="stop_timestamp" required><br><br>
+            
+            <input type="submit" value="Predict">
+        </form>
+        <div id="prediction">
+            {% if prediction %}
+                Prediction: {{ prediction }} kWh
+            {% endif %}
+        </div>
+        <div id="expectedPrice">
+            {% if prediction %}
+                Expected Price: {{ prediction * 6.5 }} Rupees (@6.5 Rs/Unit)
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
