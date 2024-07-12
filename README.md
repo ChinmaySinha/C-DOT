@@ -16,31 +16,15 @@ Now Open apptest.py
 
 Before running the apptest.py , make sure following things are done:
 The files arrangement should be in this manner--
-|-MAIN FOLDER
-   |   
-
-
-   
-   template
-
-
-   
-   |-index.html (html file for our website)
-   static
-   |-style.css (css file for our website)
-   CEEW - Smart meter data Bareilly 2020.csv
-   |
-   apptest.py
-   |
-   model.pkl
-   |
-   scaler_feature.pkl
-   |
-   scaler_target.pkl
-   |
-   pwrmgmtlstm.ipynb
+MAIN FOLDER/template/index.html (html file for our website)
+, static/style.css (css file for our website)
+, CEEW - Smart meter data Bareilly 2020.csv
+, apptest.py
+, model.pkl
+, scaler_feature.pkl
+, scaler_target.pkl
+, pwrmgmtlstm.ipynb
 |
-
 Also make sure that in terminal you run this code - pip install numpy pandas matplotlib seaborn scikit-learn tensorflow statsmodels flask joblib,
 otherwise it will show libraries not found error!
 
