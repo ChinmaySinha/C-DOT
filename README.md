@@ -17,8 +17,14 @@ Now Open apptest.py
 Before running the apptest.py , make sure following things are done:
 The files arrangement should be in this manner--
 |-MAIN FOLDER
-   |
+   |   
+
+
+   
    template
+
+
+   
    |-index.html (html file for our website)
    static
    |-style.css (css file for our website)
